@@ -3,13 +3,13 @@ const Router = express.Router();
 const response = require("../../network/response");
 const controller = require("./index");
 
-Router.post("/login", function(req, res) {
+Router.post("/login", function (req, res) {
   controller
-    .login(req.body.username, req.body.password)
-    .then(token => {
+    .login(req.body.email, req.body.password)
+    .then((token) => {
       response.success(req, res, token, 200);
     })
-    .catch(e => {
+    .catch((e) => {
       response.error(req, res, "Informacion invalida", 400);
     });
 });

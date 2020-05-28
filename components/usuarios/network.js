@@ -1,38 +1,57 @@
 const express = require("express");
-const Router = express.Router();
-const response = require('../../network/response');
-const controller = require('./index')
-//const mysqlConnection = require("../connection");
-var jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
+const router = express.Router();
+const response = require("../../network/response");
+const controller = require("./index");
+const secure = require("./secure");
 
-Router.get("/",list);
-Router.get("/:id",get);
-Router.post("/",upsert);
-Router.put("/",upsert);
+router.get("/", list);
+router.post("/", upsert);
+router.get("/:id", get);
+router.put("/", secure("update"), upsert);
+router.post("/follow/:id", secure("follow"), follow);
+router.post("/followers", secure("follow"), getFollowers);
 
-function list(req,res){
-  controller.list()
+function list(req, res, next) {
+  controller
+    .list()
     .then((lista) => {
-      response.success(req,res,lista,200)
+      response.success(req, res, lista, 200);
     })
-    .catch((err) => {
-      response.error(req,res,err.message,500)
+    .catch(next);
+}
+function get(req, res, next) {
+  controller
+    .get(req.params.id)
+    .then((user) => {
+      response.success(req, res, user, 200);
     })
+    .catch(next);
 }
-function get(req,res){
-  const user = controller.get(req.params.id).then((user) => {
-    response.success(req,res,user,200)
-  }).catch((err)=> {
-    response.error(req,res,err.message,500)
-  });
+function upsert(req, res, next) {
+  controller
+    .upsert(req.body)
+    .then((user) => {
+      response.success(req, res, user, 201);
+    })
+    .catch(next);
 }
-function upsert(req,res){
-  controller.upsert(req.body).then((user) => {
-     response.success(req,res,user,201)
-  })
+function follow(req, res, next) {
+  controller
+    .follow(req.user.id, req.params.id)
+    .then((data) => {
+      response.success(req, res, data, 201);
+    })
+    .catch(next);
 }
+function getFollowers(req, res, next) {
+  controller
+    .getFollowers(req.user.id)
+    .then((data) => {
+      response.success(req, res, data, 200);
+    })
+    .catch(next);
+}
+
 /* Router.post("/login", (req, res) => {
   var email = req.body.email;
   var password = req.body.password;
@@ -122,4 +141,4 @@ Router.post("/register", (req, res) => {
     }
   );
 }); */
-module.exports = Router;
+module.exports = router;

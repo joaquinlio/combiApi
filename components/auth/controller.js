@@ -1,32 +1,34 @@
 const auth = require("../../auth/index");
 const TABLA = "auth";
-module.exports = function(injectedStore) {
+const bcrypt = require("bcrypt");
+const saltRounds = 5;
+
+module.exports = function (injectedStore) {
   let store = injectedStore;
   if (!store) {
-    store = require("../../store/dummy");
+    store = require("../../store/mysql");
   }
-  function upsert(data) {
-    const authData = {
-      id: data.id
-    };
-    if (data.username) {
-      authData.username = data.username;
+  async function upsert(data) {
+    const authData = {};
+    if (data.email) {
+      authData.email = data.email;
     }
     if (data.password) {
-      authData.password = data.password;
+      authData.password = await bcrypt.hash(data.password, saltRounds);
     }
     return store.upsert(TABLA, authData);
   }
-  async function login(username, password) {
-    const data = await store.query(TABLA, { username: username });
-    console.log(data);
-    console.log(password);
-    if (data.password == password) {
-      //Generar token
-      return auth.sign(data);
-    } else {
-      throw new Error("Informacion Invalida");
-    }
+  async function login(email, password) {
+    const data = await store.query(TABLA, { email: email });
+    return bcrypt.compare(password, data.password).then(async (sonIguales) => {
+      if (sonIguales) {
+        const dataUsuario = await store.get("usuarios", data.id);
+        const token = auth.sign(data.id);
+        return { sesion: dataUsuario[0], token };
+      } else {
+        throw new Error("Informacion Invalida");
+      }
+    });
   }
 
   return { upsert, login };

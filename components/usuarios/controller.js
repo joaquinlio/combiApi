@@ -1,12 +1,26 @@
-const TABLA = "user";
+const TABLA = "usuarios";
 const auth = require("../auth");
-module.exports = function(injectedStore) {
+
+module.exports = function (injectedStore, injectedCache) {
+  let cache = injectedCache;
   let store = injectedStore;
+
   if (!store) {
     store = require("../../store/dummy");
   }
-  function list() {
-    return store.list(TABLA);
+  if (!cache) {
+    cache = require("../../store/dummy");
+  }
+  async function list() {
+    let users = await cache.list(TABLA);
+    if (!users) {
+      console.log("no estaba en cache BUSCANDO EN DB");
+      users = await store.list(TABLA);
+      cache.upsert(TABLA, users);
+    } else {
+      console.log("no hay datos cache");
+    }
+    return users;
   }
   function get(id) {
     return store.get(TABLA, id);
@@ -14,24 +28,33 @@ module.exports = function(injectedStore) {
   async function upsert(body) {
     const user = {
       name: body.name,
-      username: body.username,
-      password: body.password
+      email: body.email,
     };
     if (body.id) {
       user.id = body.id;
     }
-    if (body.password || body.username) {
+    if (body.password || body.email) {
       await auth.upsert({
-        id: user.id,
-        username: user.username,
-        password: user.password
+        email: user.email,
+        password: body.password,
       });
     }
     return store.upsert(TABLA, user);
   }
+  function follow(from, to) {
+    return store.upsert(TABLA + "_follow", { user_from: from, user_to: to });
+  }
+  function getFollowers(from) {
+    const join = {};
+    join[TABLA] = "user_to";
+    const query = { user_from: from };
+    return store.query(TABLA + "_follow", query, join);
+  }
   return {
     list,
     get,
-    upsert
+    upsert,
+    follow,
+    getFollowers,
   };
 };

@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "env": {
+    "MYSQL_HOST": "186.19.36.123",
+    "MYSQL_USER": "root",
+    "MYSQL_PASS": "",
+    "MYSQL_DB": "combiapp",
+    "API_PORT": "3000",
+    "JWT_SECRET": "secreto"
+  },
+  "builds": [
+    {
+      "src": "/server.js",
+      "use": "@now/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/auth(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/usuarios(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/post(.*)",
+      "dest": "/server.js"
+    }
+  ]
+}
