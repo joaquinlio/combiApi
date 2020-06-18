@@ -3,7 +3,7 @@
   "env": {
     "MYSQL_HOST": "186.19.36.123",
     "MYSQL_USER": "root",
-    "MYSQL_PASS": "",
+    "MYSQL_PASS": "3397Luna",
     "MYSQL_DB": "combiapp",
     "API_PORT": "3000",
     "JWT_SECRET": "secreto"
