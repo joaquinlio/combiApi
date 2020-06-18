@@ -20,11 +20,7 @@
       "dest": "/server.js"
     },
     {
-      "src": "/usuarios(.*)",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/post(.*)",
+      "src": "/rutas(.*)",
       "dest": "/server.js"
     }
   ]
