@@ -47,7 +47,7 @@ function get(table, id) {
       `SELECT * FROM ${table} WHERE id='${id}'`,
       (error, data) => {
         if (error) return reject(error);
-        resolve(data);
+        resolve(data[0]);
       }
     );
   });
@@ -79,24 +79,26 @@ function upsert(table, data) {
     return insert(table, data);
   }
 }
-function query(table, query, join) {
+function query(table, query, join, colums) {
   let joinQuery = "";
   if (join) {
     const key = Object.keys(join);
     const val = join[key];
     joinQuery = `JOIN ${key} ON ${table}.${val} = ${key}.id`;
   }
+  if (!colums) {
+    colums = "*";
+  }
   return new Promise((resolve, reject) => {
-    connection.query(
-      `SELECT * FROM ${table} ${joinQuery} WHERE ${table}.?`,
-      query,
-      (err, res) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(res || null);
-      }
-    );
+    let sql = `SELECT ${colums} FROM ${table} ${joinQuery}`;
+    if (query) {
+      sql = sql + ` WHERE ${table}.?`;
+    }
+    //console.log(sql);
+    connection.query(sql, query, (err, res) => {
+      if (err) return reject(err);
+      resolve(res[0] || null);
+    });
   });
 }
 
